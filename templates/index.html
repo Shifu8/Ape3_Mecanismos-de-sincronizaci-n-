@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Concurrencia</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<div class="container">
+
+<header>
+    <h1>Simulador de Concurrencia</h1>
+    <p>Mecanismos de sincronización en sistemas distribuidos</p>
+</header>
+
+<div class="cards">
+
+    <!-- EJERCICIO 1 -->
+    <div class="card">
+        <div class="card-header">
+            <span class="badge mutex">Mutex</span>
+            <h3>Ejercicio 1: Taquilla</h3>
+        </div>
+
+        <p>
+            Simula la venta de boletos donde múltiples usuarios acceden al mismo recurso.
+            Se utiliza un mutex para evitar sobreventa.
+        </p>
+
+        <button onclick="run('mutex', this)">Ejecutar</button>
+
+        <div class="resultado-card" id="res-mutex"></div>
+    </div>
+
+    <!-- EJERCICIO 2 -->
+    <div class="card">
+        <div class="card-header">
+            <span class="badge semaforo">Semáforo</span>
+            <h3>Ejercicio 2: Gimnasio</h3>
+        </div>
+
+        <p>
+            Controla el acceso a recursos limitados mediante semáforos de conteo.
+        </p>
+
+        <button onclick="run('semaforo', this)">Ejecutar</button>
+
+        <div class="resultado-card" id="res-semaforo"></div>
+    </div>
+
+    <!-- EJERCICIO 3 -->
+    <div class="card">
+        <div class="card-header">
+            <span class="badge prodcons">Prod-Cons</span>
+            <h3>Ejercicio 3: Panadería</h3>
+        </div>
+
+        <p>
+            Simula la interacción entre productor y consumidor con buffer limitado.
+        </p>
+
+        <button onclick="run('prodcons', this)">Ejecutar</button>
+
+        <div class="resultado-card" id="res-prodcons"></div>
+    </div>
+
+    <!-- EJERCICIO 4 -->
+    <div class="card">
+        <div class="card-header">
+            <span class="badge lectores">Lectores</span>
+            <h3>Ejercicio 4: Tablón</h3>
+        </div>
+
+        <p>
+            Permite múltiples lectores concurrentes y escritura exclusiva.
+        </p>
+
+        <button onclick="run('lectores', this)">Ejecutar</button>
+
+        <div class="resultado-card" id="res-lectores"></div>
+    </div>
+
+    <!-- EJERCICIO 5 -->
+    <div class="card">
+        <div class="card-header">
+            <span class="badge barrera">Barrera</span>
+            <h3>Ejercicio 5: Sincronización</h3>
+        </div>
+
+        <p>
+            Sincroniza múltiples hilos para avanzar en fases.
+        </p>
+
+        <button onclick="run('barrera', this)">Simular</button>
+
+        <div class="resultado-card" id="res-barrera"></div>
+    </div>
+
+</div>
+
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>
