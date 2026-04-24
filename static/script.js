@@ -35,20 +35,31 @@ function run(endpoint, btn) {
         // =============================
         else if (endpoint === "semaforo") {
 
-            html = `
-            <div class="label">Máximo uso de recursos</div>
-            Secuencial: ${data.secuencial.max_uso} <br>
-            Concurrente: ${data.concurrente.max_uso} <br><br>
+    let logsHTML = data.concurrente.logs
+        .map(l => "• " + l)
+        .join("<br>");
 
-            <div class="label">Tiempo</div>
-            Secuencial: ${data.secuencial.tiempo}s <br>
-            Concurrente: ${data.concurrente.tiempo}s <br><br>
+    html = `
+    <div class="label">Máximo uso de recursos</div>
+    Secuencial: ${data.secuencial.max_uso} <br>
+    Concurrente: ${data.concurrente.max_uso} <br><br>
 
-            <div class="ganador">
-                ${ganador(data)}
-            </div>
-            `;
-        }
+    <div class="label">Tiempo</div>
+    Secuencial: ${data.secuencial.tiempo}s <br>
+    Concurrente: ${data.concurrente.tiempo}s <br><br>
+
+    <div class="ganador">
+        ${ganador(data)}
+    </div>
+
+    <br>
+    <div class="label">Registro de actividad</div>
+    <div style="max-height:150px; overflow:auto; font-size:12px; margin-top:5px;">
+        ${logsHTML}
+    </div>
+    `;
+}
+
 
         // =============================
         // PRODUCTOR-CONSUMIDOR
@@ -79,40 +90,60 @@ function run(endpoint, btn) {
         // =============================
         else if (endpoint === "lectores") {
 
-            html = `
-            <div class="label">Operaciones</div>
-            Secuencial: ${data.secuencial.operaciones.length} acciones <br>
-            Concurrente: ${data.concurrente.operaciones.length} acciones <br><br>
+    let logsHTML = data.concurrente.operaciones
+        .map(l => "• " + l)
+        .join("<br>");
 
-            <div class="label">Tiempo</div>
-            Secuencial: ${data.secuencial.tiempo}s <br>
-            Concurrente: ${data.concurrente.tiempo}s <br><br>
+    html = `
+    <div class="label">Accesos registrados</div>
+    Total: ${data.concurrente.operaciones.length} <br><br>
 
-            <div class="ganador">
-                ${ganador(data)}
-            </div>
-            `;
-        }
+    <div class="label">Tiempo</div>
+    Secuencial: ${data.secuencial.tiempo}s <br>
+    Concurrente: ${data.concurrente.tiempo}s <br><br>
+
+    <div class="ganador">
+        ${ganador(data)}
+    </div>
+
+    <br>
+    <div class="label">Logs</div>
+    <div style="max-height:150px; overflow:auto; font-size:12px;">
+        ${logsHTML}
+    </div>
+    `;
+}
+
 
         // =============================
         // BARRERA
         // =============================
         else if (endpoint === "barrera") {
 
-            html = `
-            <div class="label">Ejecución de fases</div>
-            Secuencial: ${data.secuencial.orden.length} eventos <br>
-            Concurrente: ${data.concurrente.orden.length} eventos <br><br>
+    let logsHTML = data.concurrente.orden
+        .map(l => "• " + l)
+        .join("<br>");
 
-            <div class="label">Tiempo</div>
-            Secuencial: ${data.secuencial.tiempo}s <br>
-            Concurrente: ${data.concurrente.tiempo}s <br><br>
+    html = `
+    <div class="label">Eventos</div>
+    Total: ${data.concurrente.orden.length} <br><br>
 
-            <div class="ganador">
-                ${ganador(data)}
-            </div>
-            `;
-        }
+    <div class="label">Tiempo</div>
+    Secuencial: ${data.secuencial.tiempo}s <br>
+    Concurrente: ${data.concurrente.tiempo}s <br><br>
+
+    <div class="ganador">
+        ${ganador(data)}
+    </div>
+
+    <br>
+    <div class="label">Logs de sincronización</div>
+    <div style="max-height:150px; overflow:auto; font-size:12px;">
+        ${logsHTML}
+    </div>
+    `;
+}
+
 
         box.innerHTML = html;
 

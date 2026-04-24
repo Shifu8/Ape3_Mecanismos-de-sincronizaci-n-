@@ -69,12 +69,14 @@ def mutex():
 @app.route("/semaforo")
 def semaforo():
 
+    # -------------------------
     # SECUENCIAL
+    # -------------------------
     inicio_seq = time.time()
     en_uso = 0
     max_seq = 0
 
-    for _ in range(8):
+    for i in range(8):
         en_uso += 1
         max_seq = max(max_seq, en_uso)
         time.sleep(0.1)
@@ -82,33 +84,40 @@ def semaforo():
 
     fin_seq = time.time()
 
-    # CONCURRENTE
+    # -------------------------
+    # CONCURRENTE CON LOGS
+    # -------------------------
     sem = threading.Semaphore(3)
     en_uso = 0
     max_conc = 0
     lock = threading.Lock()
+    logs = []
 
-    def tarea():
+    def tarea(id):
         nonlocal en_uso, max_conc
+
+        logs.append(f"Atleta {id} intentando acceder")
 
         sem.acquire()
 
         with lock:
             en_uso += 1
             max_conc = max(max_conc, en_uso)
+            logs.append(f"Atleta {id} ENTRA | en uso: {en_uso}")
 
-        time.sleep(random.uniform(0.2, 0.4))
+        time.sleep(random.uniform(0.3, 0.6))
 
         with lock:
             en_uso -= 1
+            logs.append(f"Atleta {id} SALE | en uso: {en_uso}")
 
         sem.release()
 
     inicio_conc = time.time()
 
     hilos = []
-    for _ in range(8):
-        t = threading.Thread(target=tarea)
+    for i in range(8):
+        t = threading.Thread(target=tarea, args=(i+1,))
         hilos.append(t)
         t.start()
 
@@ -117,6 +126,8 @@ def semaforo():
 
     fin_conc = time.time()
 
+    logs.append(f"Máximo uso alcanzado: {max_conc}")
+
     return jsonify({
         "secuencial": {
             "max_uso": max_seq,
@@ -124,9 +135,11 @@ def semaforo():
         },
         "concurrente": {
             "max_uso": max_conc,
-            "tiempo": round(fin_conc - inicio_conc, 4)
+            "tiempo": round(fin_conc - inicio_conc, 4),
+            "logs": logs
         }
     })
+
 
 
 # =============================
@@ -204,55 +217,69 @@ def prodcons():
 @app.route("/lectores")
 def lectores():
 
+    # -------------------------
     # SECUENCIAL
+    # -------------------------
     inicio_seq = time.time()
     log_seq = []
 
     for i in range(3):
-        log_seq.append(f"Lector {i} leyendo")
+        log_seq.append(f"Lector {i+1} leyendo")
 
     for i in range(2):
-        log_seq.append(f"Escritor {i} escribiendo")
+        log_seq.append(f"Escritor {i+1} escribiendo")
 
     fin_seq = time.time()
 
-    # CONCURRENTE
+    # -------------------------
+    # CONCURRENTE CON LOGS
+    # -------------------------
     read_count = 0
     mutex_lectores = threading.Lock()
     mutex_escritor = threading.Lock()
-    log_conc = []
+    logs = []
 
     def lector(id):
         nonlocal read_count
 
+        logs.append(f"Lector {id} quiere leer")
+
         with mutex_lectores:
             read_count += 1
             if read_count == 1:
+                logs.append(f"Lector {id} bloquea escritores")
                 mutex_escritor.acquire()
 
-        log_conc.append(f"Lector {id} leyendo")
-        time.sleep(0.2)
+        logs.append(f"Lector {id} leyendo")
+        time.sleep(random.uniform(0.2, 0.4))
 
         with mutex_lectores:
             read_count -= 1
             if read_count == 0:
+                logs.append(f"Lector {id} libera escritores")
                 mutex_escritor.release()
 
+        logs.append(f"Lector {id} termina")
+
     def escritor(id):
+        logs.append(f"Escritor {id} quiere escribir")
+
         mutex_escritor.acquire()
-        log_conc.append(f"Escritor {id} escribiendo")
-        time.sleep(0.3)
+        logs.append(f"Escritor {id} escribiendo")
+        time.sleep(random.uniform(0.3, 0.5))
         mutex_escritor.release()
+
+        logs.append(f"Escritor {id} termina")
 
     inicio_conc = time.time()
 
     hilos = []
 
     for i in range(3):
-        hilos.append(threading.Thread(target=lector, args=(i,)))
+        hilos.append(threading.Thread(target=lector, args=(i+1,)))
 
     for i in range(2):
-        hilos.append(threading.Thread(target=escritor, args=(i,)))
+        hilos.append(threading.Thread(target=escritor, args=(i+1,)))
 
     for h in hilos:
         h.start()
@@ -268,10 +295,11 @@ def lectores():
             "tiempo": round(fin_seq - inicio_seq, 4)
         },
         "concurrente": {
-            "operaciones": log_conc,
+            "operaciones": logs,
             "tiempo": round(fin_conc - inicio_conc, 4)
         }
     })
+
 
 
 # =============================
@@ -280,33 +308,40 @@ def lectores():
 @app.route("/barrera")
 def barrera():
 
+    # -------------------------
     # SECUENCIAL
+    # -------------------------
     inicio_seq = time.time()
     orden_seq = []
 
     for i in range(5):
-        orden_seq.append(f"Hilo {i} Fase 1")
+        orden_seq.append(f"Hilo {i+1} Fase 1")
 
     for i in range(5):
-        orden_seq.append(f"Hilo {i} Fase 2")
+        orden_seq.append(f"Hilo {i+1} Fase 2")
 
     fin_seq = time.time()
 
-    # CONCURRENTE
+    # -------------------------
+    # CONCURRENTE CON LOGS
+    # -------------------------
     barrier = threading.Barrier(5)
-    orden_conc = []
+    logs = []
 
     def tarea(id):
-        orden_conc.append(f"Hilo {id} Fase 1")
-        time.sleep(random.uniform(0.2, 0.5))
+        logs.append(f"Hilo {id} inicia Fase 1")
+        time.sleep(random.uniform(0.2, 0.6))
+
+        logs.append(f"Hilo {id} esperando en barrera")
         barrier.wait()
-        orden_conc.append(f"Hilo {id} Fase 2")
+
+        logs.append(f"Hilo {id} inicia Fase 2")
 
     inicio_conc = time.time()
 
     hilos = []
     for i in range(5):
-        t = threading.Thread(target=tarea, args=(i,))
+        t = threading.Thread(target=tarea, args=(i+1,))
         hilos.append(t)
         t.start()
 
@@ -321,7 +356,7 @@ def barrera():
             "tiempo": round(fin_seq - inicio_seq, 4)
         },
         "concurrente": {
-            "orden": orden_conc,
+            "orden": logs,
             "tiempo": round(fin_conc - inicio_conc, 4)
         }
     })
