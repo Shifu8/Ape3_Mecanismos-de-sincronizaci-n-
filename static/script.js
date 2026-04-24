@@ -2,13 +2,27 @@ function run(endpoint, btn) {
 
     const box = document.getElementById("res-" + endpoint);
     box.style.display = "block";
-    box.innerHTML = "<span class='loading'>Ejecutando...</span>";
+
+    // estado de carga
+    box.innerHTML = "<span class='loading'>Simulando ejecución...</span>";
 
     fetch(`/${endpoint}`)
     .then(res => res.json())
     .then(data => {
 
         let html = "";
+
+        // helper logs
+        const renderLogs = (logs) => {
+            if (!logs) return "";
+            return `
+            <br>
+            <div class="label">Registro de actividad</div>
+            <div class="logs-box">
+                ${logs.map(l => "• " + l).join("<br>")}
+            </div>
+            `;
+        };
 
         // =============================
         // MUTEX
@@ -20,13 +34,11 @@ function run(endpoint, btn) {
             Secuencial: ${data.secuencial.resultado} <br>
             Concurrente: ${data.concurrente.resultado} <br><br>
 
-            <div class="label">Tiempo (segundos)</div>
-            Secuencial: ${data.secuencial.tiempo}s <br>
-            Concurrente: ${data.concurrente.tiempo}s <br><br>
+            ${renderTiempo(data)}
 
-            <div class="ganador">
-                ${ganador(data)}
-            </div>
+            ${renderGanador(data)}
+
+            ${renderLogs(data.concurrente.logs)}
             `;
         }
 
@@ -35,31 +47,18 @@ function run(endpoint, btn) {
         // =============================
         else if (endpoint === "semaforo") {
 
-    let logsHTML = data.concurrente.logs
-        .map(l => "• " + l)
-        .join("<br>");
+            html = `
+            <div class="label">Uso de recursos</div>
+            Secuencial: ${data.secuencial.max_uso} <br>
+            Concurrente: ${data.concurrente.max_uso} <br><br>
 
-    html = `
-    <div class="label">Máximo uso de recursos</div>
-    Secuencial: ${data.secuencial.max_uso} <br>
-    Concurrente: ${data.concurrente.max_uso} <br><br>
+            ${renderTiempo(data)}
 
-    <div class="label">Tiempo</div>
-    Secuencial: ${data.secuencial.tiempo}s <br>
-    Concurrente: ${data.concurrente.tiempo}s <br><br>
+            ${renderGanador(data)}
 
-    <div class="ganador">
-        ${ganador(data)}
-    </div>
-
-    <br>
-    <div class="label">Registro de actividad</div>
-    <div style="max-height:150px; overflow:auto; font-size:12px; margin-top:5px;">
-        ${logsHTML}
-    </div>
-    `;
-}
-
+            ${renderLogs(data.concurrente.logs)}
+            `;
+        }
 
         // =============================
         // PRODUCTOR-CONSUMIDOR
@@ -75,13 +74,11 @@ function run(endpoint, btn) {
             Secuencial: ${data.secuencial.consumidos} <br>
             Concurrente: ${data.concurrente.consumidos} <br><br>
 
-            <div class="label">Tiempo</div>
-            Secuencial: ${data.secuencial.tiempo}s <br>
-            Concurrente: ${data.concurrente.tiempo}s <br><br>
+            ${renderTiempo(data)}
 
-            <div class="ganador">
-                ${ganador(data)}
-            </div>
+            ${renderGanador(data)}
+
+            ${renderLogs(data.concurrente.logs)}
             `;
         }
 
@@ -90,75 +87,62 @@ function run(endpoint, btn) {
         // =============================
         else if (endpoint === "lectores") {
 
-    let logsHTML = data.concurrente.operaciones
-        .map(l => "• " + l)
-        .join("<br>");
+            html = `
+            <div class="label">Accesos registrados</div>
+            Total: ${data.concurrente.operaciones.length} <br><br>
 
-    html = `
-    <div class="label">Accesos registrados</div>
-    Total: ${data.concurrente.operaciones.length} <br><br>
+            ${renderTiempo(data)}
 
-    <div class="label">Tiempo</div>
-    Secuencial: ${data.secuencial.tiempo}s <br>
-    Concurrente: ${data.concurrente.tiempo}s <br><br>
+            ${renderGanador(data)}
 
-    <div class="ganador">
-        ${ganador(data)}
-    </div>
-
-    <br>
-    <div class="label">Logs</div>
-    <div style="max-height:150px; overflow:auto; font-size:12px;">
-        ${logsHTML}
-    </div>
-    `;
-}
-
+            ${renderLogs(data.concurrente.operaciones)}
+            `;
+        }
 
         // =============================
         // BARRERA
         // =============================
         else if (endpoint === "barrera") {
 
-    let logsHTML = data.concurrente.orden
-        .map(l => "• " + l)
-        .join("<br>");
+            html = `
+            <div class="label">Eventos sincronizados</div>
+            Total: ${data.concurrente.orden.length} <br><br>
 
-    html = `
-    <div class="label">Eventos</div>
-    Total: ${data.concurrente.orden.length} <br><br>
+            ${renderTiempo(data)}
 
-    <div class="label">Tiempo</div>
-    Secuencial: ${data.secuencial.tiempo}s <br>
-    Concurrente: ${data.concurrente.tiempo}s <br><br>
+            ${renderGanador(data)}
 
-    <div class="ganador">
-        ${ganador(data)}
-    </div>
-
-    <br>
-    <div class="label">Logs de sincronización</div>
-    <div style="max-height:150px; overflow:auto; font-size:12px;">
-        ${logsHTML}
-    </div>
-    `;
-}
-
+            ${renderLogs(data.concurrente.orden)}
+            `;
+        }
 
         box.innerHTML = html;
 
     })
     .catch(err => {
-        box.innerText = "Error: " + err;
+        box.innerHTML = "<span style='color:red;'>Error: " + err + "</span>";
     });
 }
 
 
 // =============================
-// FUNCIÓN PARA DECIDIR GANADOR
+// 🔹 BLOQUES REUTILIZABLES
 // =============================
-function ganador(data) {
-    return data.concurrente.tiempo < data.secuencial.tiempo
-        ? "Concurrente más rápido"
-        : "Secuencial más rápido";
+
+function renderTiempo(data) {
+    return `
+    <div class="label">Tiempo (segundos)</div>
+    Secuencial: ${data.secuencial.tiempo}s <br>
+    Concurrente: ${data.concurrente.tiempo}s <br><br>
+    `;
+}
+
+function renderGanador(data) {
+    const esConc = data.concurrente.tiempo < data.secuencial.tiempo;
+
+    return `
+    <div class="ganador ${esConc ? 'ok' : 'warn'}">
+        ${esConc ? "Concurrente más rápido" : "Secuencial más rápido"}
+    </div>
+    `;
 }

@@ -15,34 +15,51 @@ def home():
 # =============================
 @app.route("/mutex")
 def mutex():
+
     N = 5
     M = 100000
 
+    # -------------------------
     # SECUENCIAL
+    # -------------------------
     contador_seq = 0
+    logs_seq = []
+
     inicio_seq = time.time()
 
-    for _ in range(N):
+    for i in range(N):
+        logs_seq.append(f"Tarea {i+1} inicia")
         for _ in range(M):
             contador_seq += 1
+        logs_seq.append(f"Tarea {i+1} termina")
 
     fin_seq = time.time()
 
-    # CONCURRENTE
+    # -------------------------
+    # CONCURRENTE CON LOGS
+    # -------------------------
     contador_conc = 0
     lock = threading.Lock()
+    logs = []
 
-    def tarea():
+    def tarea(id):
         nonlocal contador_conc
-        for _ in range(M):
-            with lock:
+
+        logs.append(f"Hilo {id} quiere entrar a sección crítica")
+
+        with lock:
+            logs.append(f"Hilo {id} ENTRA a sección crítica")
+
+            for _ in range(M):
                 contador_conc += 1
+
+            logs.append(f"Hilo {id} SALE de sección crítica")
 
     inicio_conc = time.time()
 
     hilos = []
-    for _ in range(N):
-        t = threading.Thread(target=tarea)
+    for i in range(N):
+        t = threading.Thread(target=tarea, args=(i+1,))
         hilos.append(t)
         t.start()
 
@@ -54,13 +71,16 @@ def mutex():
     return jsonify({
         "secuencial": {
             "resultado": contador_seq,
-            "tiempo": round(fin_seq - inicio_seq, 4)
+            "tiempo": round(fin_seq - inicio_seq, 4),
+            "logs": logs_seq
         },
         "concurrente": {
             "resultado": contador_conc,
-            "tiempo": round(fin_conc - inicio_conc, 4)
+            "tiempo": round(fin_conc - inicio_conc, 4),
+            "logs": logs
         }
     })
+
 
 
 # =============================
@@ -148,17 +168,30 @@ def semaforo():
 @app.route("/prodcons")
 def prodcons():
 
+    size = 10
+
+    # -------------------------
     # SECUENCIAL
+    # -------------------------
+    buffer = []
+    logs_seq = []
+
     inicio_seq = time.time()
 
-    produced_seq = 20
-    consumed_seq = 20
+    for i in range(20):
+        buffer.append(i)
+        logs_seq.append(f"Produce {i}")
+
+    for i in range(20):
+        item = buffer.pop(0)
+        logs_seq.append(f"Consume {item}")
 
     fin_seq = time.time()
 
-    # CONCURRENTE
+    # -------------------------
+    # CONCURRENTE CON LOGS
+    # -------------------------
     buffer = []
-    size = 10
 
     mutex = threading.Lock()
     empty = threading.Semaphore(size)
@@ -166,24 +199,33 @@ def prodcons():
 
     produced = 0
     consumed = 0
+    logs = []
 
     def productor():
         nonlocal produced
         for i in range(20):
             empty.acquire()
+
             with mutex:
                 buffer.append(i)
                 produced += 1
+                logs.append(f"Productor produce {i} | buffer: {len(buffer)}")
+
             full.release()
+            time.sleep(random.uniform(0.1, 0.3))
 
     def consumidor():
         nonlocal consumed
         for i in range(20):
             full.acquire()
+
             with mutex:
-                buffer.pop(0)
+                item = buffer.pop(0)
                 consumed += 1
+                logs.append(f"Consumidor consume {item} | buffer: {len(buffer)}")
+
             empty.release()
+            time.sleep(random.uniform(0.1, 0.3))
 
     inicio_conc = time.time()
 
@@ -192,6 +234,7 @@ def prodcons():
 
     t1.start()
     t2.start()
+
     t1.join()
     t2.join()
 
@@ -199,16 +242,20 @@ def prodcons():
 
     return jsonify({
         "secuencial": {
-            "producidos": produced_seq,
-            "consumidos": consumed_seq,
-            "tiempo": round(fin_seq - inicio_seq, 4)
+            "producidos": 20,
+            "consumidos": 20,
+            "tiempo": round(fin_seq - inicio_seq, 4),
+            "logs": logs_seq
         },
         "concurrente": {
             "producidos": produced,
             "consumidos": consumed,
-            "tiempo": round(fin_conc - inicio_conc, 4)
+            "tiempo": round(fin_conc - inicio_conc, 4),
+            "logs": logs
         }
     })
+
+
 
 
 # =============================
